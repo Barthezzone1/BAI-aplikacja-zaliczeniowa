@@ -1,13 +1,10 @@
 <template>
+  
   <nav>
-    <RouterLink to="/"> Home</RouterLink> |
-    <RouterLink to="/feed"> Feed</RouterLink> |
-    <RouterLink to="/register"> Register</RouterLink> |
-    <RouterLink to="/sign-in"> Login</RouterLink> |
     <button @click="handleSignOut" v-if="isLoggedIn" >Sign out</button>
 
   </nav>
-
+  
   <RouterView />
 </template>
 
@@ -31,6 +28,10 @@ onMounted(() => {
   });
 
 });
+
+
+
+
 
 const router = useRouter()
 
