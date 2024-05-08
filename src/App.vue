@@ -17,7 +17,7 @@
       </button>
     </div>
     <div class="hidden lg:flex lg:gap-x-12">
-      
+      <a v-if="isLoggedIn && !isAuthView" href="/feed" class="text-sm font-semibold leading-6 text-gray-900">Dziennik odżywiania</a>
       <a href="/products" class="text-sm font-semibold leading-6 text-gray-900">Baza produktów</a>
       <a href="/about" class="text-sm font-semibold leading-6 text-gray-900">O nas</a>
       <a href="/blog" class="text-sm font-semibold leading-6 text-gray-900">Blog</a>
