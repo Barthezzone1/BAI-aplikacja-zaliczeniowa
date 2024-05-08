@@ -86,12 +86,15 @@ const getCurrentUser = () => {
 
 router.beforeEach((to, from, next) => {
   if (to.meta.requiresFormFilled && !localStorage.getItem('infoCompleted')) {
-    next('/info'); // Przekierowanie do formularza, jeśli formularz nie jest wypełniony
+    if (to.path !== '/info') {
+      next('/info'); // Redirect to /info only if not already there
+    } else {
+      next(); // If already on /info, continue navigation
+    }
   } else {
-    next(); // Kontynuacja nawigacji
+    next(); // Continue navigation for other routes
   }
 });
-
 
 
 
