@@ -1,5 +1,6 @@
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router';
+import Info from '../views/Info.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -13,6 +14,12 @@ const router = createRouter({
       path: '/products',
       name: 'products',
       component: () => import('../views/Products.vue')
+    },
+    {
+      path: '/product/:id',
+      name: 'ProductDetails',
+      component: () => import('../views/ProductDetails.vue'),
+      props: true
     },
     {
       path: '/register',
@@ -33,14 +40,33 @@ const router = createRouter({
       path: '/sign-in',
       name: 'sign-in',
       component: () => import('../views/SignIn.vue')
-    },{
+    },
+    {
       path: '/feed',
       name: 'feed',
       component: () => import('../views/Feed.vue'),
       meta: {
         requiresAuth: true,
       },
-    }
+    },
+    {
+      path: '/info',
+      name: 'info',
+      component: () => import('../views/Info.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresFormFilled: true
+      },
+    },
+    {
+      path: '/account',
+      name: 'account',
+      component: () => import('../views/Account.vue'),
+      meta: {
+        requiresAuth: true,
+      },
+    },
+
   ]
 })
 
@@ -58,18 +84,15 @@ const getCurrentUser = () => {
   });
 };
 
-router.beforeEach(async(to , from, next) => {
-  if (to.matched.some((record) => record.meta.requiresAuth)) {
-    if(await getCurrentUser()) {
-      next();
-    } else {
-    alert("you dont have access!");
-    next("/");
-    }
-} else {
-    next();
+router.beforeEach((to, from, next) => {
+  if (to.meta.requiresFormFilled && !localStorage.getItem('infoCompleted')) {
+    next('/info'); // Przekierowanie do formularza, jeśli formularz nie jest wypełniony
+  } else {
+    next(); // Kontynuacja nawigacji
   }
-
-
 });
+
+
+
+
 export default router

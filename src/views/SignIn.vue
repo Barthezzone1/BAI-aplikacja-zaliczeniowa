@@ -1,5 +1,8 @@
 <template>
     <div class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
+      <div class="mt-4">
+        <router-link to="/" class="text-lime-500 hover:text-indigo-500 font-semibold">Wstecz</router-link>
+      </div>
       <div class="sm:mx-auto sm:w-full sm:max-w-sm">
         <img class="mx-auto h-10 w-auto" src="https://firebasestorage.googleapis.com/v0/b/bai-infit.appspot.com/o/logo%2FInFitLogo.PNG?alt=media&token=968fcdec-4cbb-47ac-9139-8b4bbcc6979e" alt="Your Company">
         <h2 class="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">Sign in to your account</h2>
