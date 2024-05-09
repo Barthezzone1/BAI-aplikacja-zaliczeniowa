@@ -10,6 +10,15 @@
     </div>
     <div>Wybrana data: {{ wybData }}</div>
   </div>
+  <div class="card">
+      <h2 class="section-header">ŚNIADANIE</h2>
+      <hr class="section-divider">
+      <ul>
+        <li v-for="product in breakfastProducts" :key="product.id">
+          {{ product.id }}
+        </li>
+      </ul>
+    </div>
 </template>
 
 <script>
@@ -71,6 +80,7 @@ export default {
 
     // Initial generation of dates
     dates.value = generateDates();
+    
 
     return {
       currentMonth,
@@ -91,6 +101,8 @@ export default {
   border: 1px solid #ccc;
   padding: 10px;
   margin: 0 auto;
+  margin-bottom: 20px;
+  margin-top: 20px;
 }
 
 .header {
@@ -114,5 +126,14 @@ export default {
 
 .days div.active {
   background-color: lightblue;
+}
+
+.card {
+  width: 300px; /* Szerokość karty */
+        margin: 0 auto; /* Wyśrodkowanie karty */
+        border: 1px solid #ccc; /* Ramka karty */
+        padding: 20px; /* Wypełnienie wewnątrz karty */
+        border-radius: 5px; /* Zaokrąglenie rogów karty */
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Cień */
 }
 </style>
