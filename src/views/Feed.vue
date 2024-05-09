@@ -1,124 +1,118 @@
 <template>
-  <div class="week-calendar">
-    <div class="day" 
-         v-for="day in weekDays" 
-         :key="day.date" 
-         :class="{ 'current': day.isCurrent, 'selected': selectedDate === day.date }"
-         @click="selectDay(day.date)">
-      {{ day.name }}<br>{{ day.date }}
+  <div class="calendar">
+    <div class="header">
+      <button @click="previousMonth">&lt;</button>
+      <h2>{{ currentMonth }}</h2>
+      <button @click="nextMonth">&gt;</button>
     </div>
-  </div>
-
-  <div class="spacing"></div>
-
-  <div class="meals-container">
-    <div class="meal" 
-         v-for="meal in ['Śniadanie', 'Obiad', 'Kolacja', 'Przekąski']" 
-         :key="meal"
-         @click="goToMeal(meal)">
-      {{ meal }}
+    <div class="days">
+      <div v-for="date in dates" :key="date.day" @click="selectDate(date)" :class="{ active: isSelected(date) }">{{ date.day }}</div>
     </div>
+    <div>Wybrana data: {{ wybData }}</div>
   </div>
 </template>
 
 <script>
-import { defineComponent, ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed } from 'vue';
 
-export default defineComponent({
-  name: 'WeekCalendar',
+export default {
+  name: 'Calendar',
   setup() {
-    const router = useRouter();
-    const weekDays = ref([]);
-    const selectedDate = ref("");
-
-    const getWeekDays = () => {
-      const today = new Date();
-      for (let i = -3; i <= 3; i++) {
-        const nextDay = new Date(today);
-        nextDay.setDate(today.getDate() + i);
-        weekDays.value.push({
-          name: nextDay.toLocaleDateString('pl-PL', { weekday: 'long' }),
-          date: nextDay.toLocaleDateString('pl-PL'),
-          isCurrent: i === 0
-        });
-      }
-    };
-
-    const selectDay = (date) => {
-      selectedDate.value = date;
-    };
-
-    const goToMeal = (meal) => {
-  router.push({ name: 'Meal', params: { mealName: meal } });
-};
-
-    onMounted(() => {
-      getWeekDays();
+    const currentDate = ref(new Date());
+    const selectedDate = ref({
+      day: currentDate.value.getDate(),
+      month: currentDate.value.getMonth(),
+      year: currentDate.value.getFullYear()
     });
 
-    return {
-      weekDays,
-      selectedDate,
-      selectDay,
-      goToMeal
+    const currentMonth = ref(currentDate.value.toLocaleString('default', { month: 'long', year: 'numeric' }));
+    const wybData = ref('');
+
+    const generateDates = () => {
+      const year = currentDate.value.getFullYear();
+      const month = currentDate.value.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const datesArray = [];
+      for (let i = 1; i <= daysInMonth; i++) {
+        datesArray.push({ day: i, month, year });
+      }
+      return datesArray;
     };
-  }
-});
+
+    const dates = ref([]);
+
+    const isSelected = (date) => {
+      if (!selectedDate.value) return false;
+      return selectedDate.value.day === date.day && selectedDate.value.month === date.month && selectedDate.value.year === date.year;
+    };
+
+    const selectDate = (date) => {
+      selectedDate.value = date;
+      wybData.value = `${date.year}-${date.month + 1}-${date.day}`;
+      console.log('Selected Date:', wybData.value);
+    };
+
+    const previousMonth = () => {
+      currentDate.value.setMonth(currentDate.value.getMonth() - 1);
+      dates.value = generateDates();
+      // Aktualizacja etykiety miesiąca po zmianie miesiąca
+      currentMonth.value = currentDate.value.toLocaleString('default', { month: 'long', year: 'numeric' });
+    };
+
+    const nextMonth = () => {
+      currentDate.value.setMonth(currentDate.value.getMonth() + 1);
+      dates.value = generateDates();
+      // Aktualizacja etykiety miesiąca po zmianie miesiąca
+      currentMonth.value = currentDate.value.toLocaleString('default', { month: 'long', year: 'numeric' });
+    };
+
+    // Ustawienie początkowej wartości wybData na dzisiejszą datę
+    wybData.value = `${currentDate.value.getFullYear()}-${currentDate.value.getMonth() + 1}-${currentDate.value.getDate()}`;
+
+    // Initial generation of dates
+    dates.value = generateDates();
+
+    return {
+      currentMonth,
+      dates,
+      selectDate,
+      isSelected,
+      previousMonth,
+      nextMonth,
+      wybData
+    };
+  },
+};
 </script>
-<style scoped>
-.week-calendar {
+
+<style>
+.calendar {
+  width: 300px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin: 0 auto;
+}
+
+.header {
   display: flex;
   justify-content: space-between;
-  padding: 10px;
-  background-color: #f9f9f9;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  align-items: center;
+  margin-bottom: 10px;
 }
 
-.day {
-  flex: 1;
-  text-align: center;
+.days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.days div {
   padding: 5px;
-  background-color: #ffffff;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.day:hover, .meal:hover {
-  background-color: #f1f1f1;
-}
-
-.selected {
-  background-color: #ffcccc;
-  color: #6358a1;
-}
-
-.spacing {
-  height: 72px; /* Wysokość odpowiadająca trzem enterom */
-}
-
-.meals-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-}
-
-.meal {
-  padding: 10px;
-  background-color: #e8e8e8;
-  border-radius: 5px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
   text-align: center;
-  margin: 5px 0; /* Mały odstęp pomiędzy posiłkami */
-  width: 50%; /* Szerokość kontenera posiłków */
-  display: flex;
-  justify-content: center;
-  align-items: center;
   cursor: pointer;
-  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.days div.active {
+  background-color: lightblue;
 }
 </style>
