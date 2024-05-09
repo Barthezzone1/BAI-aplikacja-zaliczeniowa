@@ -1,6 +1,7 @@
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { createRouter, createWebHistory } from 'vue-router';
 import Info from '../views/Info.vue';
+import Meal from '../views/Meal.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -9,6 +10,11 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: () => import('../views/Home.vue')
+    },
+    {
+      path: '/meal/:mealName',
+      name: 'Meal',
+      component: () => import('../views/Meal.vue')
     },
     {
       path: '/products',
@@ -86,15 +92,12 @@ const getCurrentUser = () => {
 
 router.beforeEach((to, from, next) => {
   if (to.meta.requiresFormFilled && !localStorage.getItem('infoCompleted')) {
-    if (to.path !== '/info') {
-      next('/info'); // Redirect to /info only if not already there
-    } else {
-      next(); // If already on /info, continue navigation
-    }
+    next('/info'); // Przekierowanie do formularza, jeśli formularz nie jest wypełniony
   } else {
-    next(); // Continue navigation for other routes
+    next(); // Kontynuacja nawigacji
   }
 });
+
 
 
 
