@@ -49,6 +49,7 @@ const isLoggedIn = ref(false);
 const isAuthView = ref(false);
 const router = useRouter();
 
+
 let auth;
 
 onMounted(() => {
