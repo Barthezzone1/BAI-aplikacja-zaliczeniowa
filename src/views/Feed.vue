@@ -11,18 +11,41 @@
     <div>Wybrana data: {{ wybData }}</div>
   </div>
   <div class="card">
-      <h2 class="section-header">ŚNIADANIE</h2>
-      <hr class="section-divider">
-      <ul>
-        <li v-for="product in breakfastProducts" :key="product.id">
-          {{ product.id }}
-        </li>
-      </ul>
-    </div>
+    <h2 class="section-header">ŚNIADANIE</h2>
+    <hr class="section-divider">
+    <ul>
+      <li v-for="product in breakfastProducts" :key="product.id">
+        {{ product.id }} - {{ product.quantity }} szt.
+      </li>
+    </ul>
+    <button @click="addProduct('breakfast')">Dodaj produkt</button>
+  </div>
+  <div class="card">
+    <h2 class="section-header">OBIAD</h2>
+    <hr class="section-divider">
+    <ul>
+      <li v-for="product in lunchProducts" :key="product.id">
+        {{ product.id }} - {{ product.quantity }} szt.
+      </li>
+    </ul>
+    <button @click="addProduct('lunch')">Dodaj produkt</button>
+  </div>
+  <div class="card">
+    <h2 class="section-header">KOLACJA</h2>
+    <hr class="section-divider">
+    <ul>
+      <li v-for="product in dinerProducts" :key="product.id">
+        {{ product.id }} - {{ product.quantity }} szt.
+      </li>
+    </ul>
+    <button @click="addProduct('dinner')">Dodaj produkt</button>
+  </div>
 </template>
 
 <script>
 import { ref, computed } from 'vue';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../main';
 
 export default {
   name: 'Calendar',
@@ -36,6 +59,7 @@ export default {
 
     const currentMonth = ref(currentDate.value.toLocaleString('default', { month: 'long', year: 'numeric' }));
     const wybData = ref('');
+    const userId = 'lDJPYm327dfhsrEbqrcAzJZfLLv1'; // User ID
 
     const generateDates = () => {
       const year = currentDate.value.getFullYear();
@@ -59,28 +83,59 @@ export default {
       selectedDate.value = date;
       wybData.value = `${date.year}-${date.month + 1}-${date.day}`;
       console.log('Selected Date:', wybData.value);
+      fetchProducts(date);
     };
+
+    const fetchProducts = async (date) => {
+      const docRef = doc(db, userId, 'dates', `${date.year}-${date.month + 1}-${date.day}`);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        breakfastProducts.value = data.breakfast ? data.breakfast.eatenProducts : [];
+        lunchProducts.value = data.lunch ? data.lunch.eatenProducts : [];
+        dinnerProducts.value = data.dinner ? data.dinner.eatenProducts : [];
+      } else {
+        // Reset products if no data found for the date
+        breakfastProducts.value = [];
+        lunchProducts.value = [];
+        dinnerProducts.value = [];
+      }
+    };
+
+    const addProduct = async (mealType) => {
+      const product = await prompt('Enter product ID:');
+      if (product) {
+        const docRef = doc(db, userId, 'dates', `${selectedDate.value.year}-${selectedDate.value.month + 1}-${selectedDate.value.day}`, mealType);
+        const docSnap = await getDoc(docRef);
+        let data = {};
+        if (docSnap.exists()) {
+          data = docSnap.data();
+        }
+        const eatenProducts = data.eatenProducts || [];
+        eatenProducts.push({ productId: product, quantity: 1 }); // Assuming quantity starts from 1
+        await setDoc(docRef, { eatenProducts }, { merge: true });
+        fetchProducts(selectedDate.value);
+      }
+    };
+
+    const breakfastProducts = ref([]);
+    const lunchProducts = ref([]);
+    const dinnerProducts = ref([]);
 
     const previousMonth = () => {
       currentDate.value.setMonth(currentDate.value.getMonth() - 1);
       dates.value = generateDates();
-      // Aktualizacja etykiety miesiąca po zmianie miesiąca
       currentMonth.value = currentDate.value.toLocaleString('default', { month: 'long', year: 'numeric' });
     };
 
     const nextMonth = () => {
       currentDate.value.setMonth(currentDate.value.getMonth() + 1);
       dates.value = generateDates();
-      // Aktualizacja etykiety miesiąca po zmianie miesiąca
       currentMonth.value = currentDate.value.toLocaleString('default', { month: 'long', year: 'numeric' });
     };
 
-    // Ustawienie początkowej wartości wybData na dzisiejszą datę
     wybData.value = `${currentDate.value.getFullYear()}-${currentDate.value.getMonth() + 1}-${currentDate.value.getDate()}`;
-
-    // Initial generation of dates
     dates.value = generateDates();
-    
 
     return {
       currentMonth,
@@ -89,7 +144,11 @@ export default {
       isSelected,
       previousMonth,
       nextMonth,
-      wybData
+      wybData,
+      addProduct,
+      breakfastProducts,
+      lunchProducts,
+      dinnerProducts
     };
   },
 };
