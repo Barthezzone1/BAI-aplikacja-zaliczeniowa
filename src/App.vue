@@ -17,7 +17,7 @@
       </button>
     </div>
     <div class="hidden lg:flex lg:gap-x-12">
-      <a v-if="isLoggedIn && !isAuthView" href="/feed" class="text-sm font-semibold leading-6 text-gray-900">Dziennik odżywiania</a>
+      <a v-if="isLoggedIn" @click="goToFeed" class="text-sm font-semibold leading-6 text-gray-900">Dziennik odżywiania</a>
       <a href="/products" class="text-sm font-semibold leading-6 text-gray-900">Baza produktów</a>
       <a href="/about" class="text-sm font-semibold leading-6 text-gray-900">O nas</a>
       <a href="/blog" class="text-sm font-semibold leading-6 text-gray-900">Blog</a>
@@ -49,7 +49,6 @@ const isLoggedIn = ref(false);
 const isAuthView = ref(false);
 const router = useRouter();
 
-
 let auth;
 
 onMounted(() => {
@@ -57,13 +56,22 @@ onMounted(() => {
   onAuthStateChanged(auth, (user) => {
     if (user) {
       isLoggedIn.value = true;
+      console.log(isLoggedIn);
+      localStorage.setItem("isLoggedIn", "true");
     } else {
       isLoggedIn.value = false;
+      console.log(isLoggedIn);
+      localStorage.removeItem("isLoggedIn");
     }
     
   });
-
+  const isLoggedInLocalStorage = localStorage.getItem("isLoggedIn");
+  if (isLoggedInLocalStorage === "true") {
+    isLoggedIn.value = true;
+  }
 });
+
+
 
 
 
@@ -88,5 +96,9 @@ const handleSignOut = () => {
 
 const goToProfile = () => {
   router.push("/account");
+};
+
+const goToFeed = () => {
+  router.push("/feed");
 };
 </script>
