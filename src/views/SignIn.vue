@@ -34,15 +34,17 @@
   </template>
 <script setup>
 import { ref } from 'vue';
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { getAuth, signInWithEmailAndPassword, setPersistence, browserSessionPersistence } from "firebase/auth";
 import { useRouter } from 'vue-router'
 const email = ref('');
 const password = ref('');
-const errMsg = ref()
-const router = useRouter()
+const errMsg = ref();
+const router = useRouter();
+const auth = getAuth();
 
 const login = () => {
-    signInWithEmailAndPassword(getAuth(), email.value, password.value)
+  setPersistence(auth, browserSessionPersistence);  
+  signInWithEmailAndPassword(getAuth(), email.value, password.value)
     .then((data) => {
         console.log("succ log");
         router.push('/feed')
@@ -69,9 +71,6 @@ const login = () => {
     });
 };
 
-const signInWithGoogle = () => {
-
-};
 
 
 </script>
