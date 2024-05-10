@@ -32,8 +32,10 @@ const redirectToInfo = () => {
 
 const fetchData = async () => {
   const user = auth.currentUser;
+  console.log(user,"huj");
   if (user) {
     userUid.value = user.uid; // Przypisanie UID użytkownika
+    console.log("Użytkownik jest zalogowany. UID:", userUid.value);
     const q = query(collection(db, 'info'), where('userId', '==', userUid.value));
     const querySnapshot = await getDocs(q);
     if (querySnapshot.empty) {
