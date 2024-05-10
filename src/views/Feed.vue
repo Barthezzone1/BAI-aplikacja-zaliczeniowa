@@ -46,6 +46,7 @@
 import { ref } from 'vue';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../main';
+import { getAuth } from 'firebase/auth';
 
 export default {
   name: 'Calendar',
@@ -59,8 +60,18 @@ export default {
 
     const currentMonth = ref(currentDate.value.toLocaleString('default', { month: 'long', year: 'numeric' }));
     const wybData = ref('');
-    const userId = 'lDJPYm327dfhsrEbqrcAzJZfLLv1'; // User ID
+    let userId = ''; // User ID
 
+    // Pobranie bieżącego zalogowanego użytkownika
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (user) {
+      userId = user.uid;
+    } else {
+      // Obsługa braku zalogowanego użytkownika
+      console.error('Użytkownik niezalogowany');
+    }
     const generateDates = () => {
       const year = currentDate.value.getFullYear();
       const month = currentDate.value.getMonth();
