@@ -9,7 +9,6 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
-
 // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyDB-GSSw2swYi-2g3CJZDRUfW7AgYaoE9U",
@@ -25,7 +24,6 @@ const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
 
 const app = createApp(App)
-
 app.use(router)
 
 app.mount('#app')
