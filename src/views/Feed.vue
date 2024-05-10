@@ -43,7 +43,7 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../main';
 import { getAuth } from 'firebase/auth';
@@ -98,35 +98,35 @@ export default {
     };
 
     const fetchProducts = async (date) => {
-  const docRefBreakfast = doc(db, userId, 'dates', `${date.year}-${date.month + 1}-${date.day}`, 'breakfast');
-  const docRefLunch = doc(db, userId, 'dates', `${date.year}-${date.month + 1}-${date.day}`, 'lunch');
-  const docRefDinner = doc(db, userId, 'dates', `${date.year}-${date.month + 1}-${date.day}`, 'dinner');
+      const docRefBreakfast = doc(db, userId, 'dates', `${date.year}-${date.month + 1}-${date.day}`, 'breakfast');
+      const docRefLunch = doc(db, userId, 'dates', `${date.year}-${date.month + 1}-${date.day}`, 'lunch');
+      const docRefDinner = doc(db, userId, 'dates', `${date.year}-${date.month + 1}-${date.day}`, 'dinner');
 
-  const breakfastSnap = await getDoc(docRefBreakfast);
-  const lunchSnap = await getDoc(docRefLunch);
-  const dinnerSnap = await getDoc(docRefDinner);
+      const breakfastSnap = await getDoc(docRefBreakfast);
+      const lunchSnap = await getDoc(docRefLunch);
+      const dinnerSnap = await getDoc(docRefDinner);
 
-  if (breakfastSnap.exists()) {
-    const breakfastData = breakfastSnap.data();
-    breakfastProducts.value = breakfastData.eatenProducts || [];
-  } else {
-    breakfastProducts.value = [];
-  }
+      if (breakfastSnap.exists()) {
+        const breakfastData = breakfastSnap.data();
+        breakfastProducts.value = breakfastData.eatenProducts || [];
+      } else {
+        breakfastProducts.value = [];
+      }
 
-  if (lunchSnap.exists()) {
-    const lunchData = lunchSnap.data();
-    lunchProducts.value = lunchData.eatenProducts || [];
-  } else {
-    lunchProducts.value = [];
-  }
+      if (lunchSnap.exists()) {
+        const lunchData = lunchSnap.data();
+        lunchProducts.value = lunchData.eatenProducts || [];
+      } else {
+        lunchProducts.value = [];
+      }
 
-  if (dinnerSnap.exists()) {
-    const dinnerData = dinnerSnap.data();
-    dinnerProducts.value = dinnerData.eatenProducts || [];
-  } else {
-    dinnerProducts.value = [];
-  }
-};
+      if (dinnerSnap.exists()) {
+        const dinnerData = dinnerSnap.data();
+        dinnerProducts.value = dinnerData.eatenProducts || [];
+      } else {
+        dinnerProducts.value = [];
+      }
+    };
 
     const addProduct = async (mealType) => {
       const product = await prompt('Enter product ID:');
@@ -165,16 +165,19 @@ export default {
       currentDate.value.setMonth(currentDate.value.getMonth() - 1);
       dates.value = generateDates();
       currentMonth.value = currentDate.value.toLocaleString('default', { month: 'long', year: 'numeric' });
+      fetchProducts(selectedDate.value); // Dodaj tę linię
     };
 
     const nextMonth = () => {
       currentDate.value.setMonth(currentDate.value.getMonth() + 1);
       dates.value = generateDates();
       currentMonth.value = currentDate.value.toLocaleString('default', { month: 'long', year: 'numeric' });
+      fetchProducts(selectedDate.value); // Dodaj tę linię
     };
 
     wybData.value = `${currentDate.value.getFullYear()}-${currentDate.value.getMonth() + 1}-${currentDate.value.getDate()}`;
     dates.value = generateDates();
+    fetchProducts(selectedDate.value); // Dodaj tę linię
 
     return {
       currentMonth,
@@ -193,6 +196,7 @@ export default {
   },
 };
 </script>
+
 
 <style>
 .calendar {
