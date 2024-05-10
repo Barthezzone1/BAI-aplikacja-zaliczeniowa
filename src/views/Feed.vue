@@ -14,8 +14,8 @@
     <h2 class="section-header">ŚNIADANIE</h2>
     <hr class="section-divider">
     <ul>
-      <li v-for="product in breakfastProducts" :key="product.id">
-        {{ product.id }} - {{ product.quantity }} szt.
+      <li v-for="product in selectedDateProducts('breakfast')" :key="product.productId">
+        {{ product.productId }} - {{ product.quantity }} szt.
       </li>
     </ul>
     <button @click="addProduct('breakfast')">Dodaj produkt</button>
@@ -24,8 +24,8 @@
     <h2 class="section-header">OBIAD</h2>
     <hr class="section-divider">
     <ul>
-      <li v-for="product in lunchProducts" :key="product.id">
-        {{ product.id }} - {{ product.quantity }} szt.
+      <li v-for="product in selectedDateProducts('lunch')" :key="product.productId">
+        {{ product.productId }} - {{ product.quantity }} szt.
       </li>
     </ul>
     <button @click="addProduct('lunch')">Dodaj produkt</button>
@@ -34,8 +34,8 @@
     <h2 class="section-header">KOLACJA</h2>
     <hr class="section-divider">
     <ul>
-      <li v-for="product in dinerProducts" :key="product.id">
-        {{ product.id }} - {{ product.quantity }} szt.
+      <li v-for="product in selectedDateProducts('dinner')" :key="product.productId">
+        {{ product.productId }} - {{ product.quantity }} szt.
       </li>
     </ul>
     <button @click="addProduct('dinner')">Dodaj produkt</button>
@@ -43,7 +43,7 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../main';
 
@@ -87,20 +87,35 @@ export default {
     };
 
     const fetchProducts = async (date) => {
-      const docRef = doc(db, userId, 'dates', `${date.year}-${date.month + 1}-${date.day}`);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        breakfastProducts.value = data.breakfast ? data.breakfast.eatenProducts : [];
-        lunchProducts.value = data.lunch ? data.lunch.eatenProducts : [];
-        dinnerProducts.value = data.dinner ? data.dinner.eatenProducts : [];
-      } else {
-        // Reset products if no data found for the date
-        breakfastProducts.value = [];
-        lunchProducts.value = [];
-        dinnerProducts.value = [];
-      }
-    };
+  const docRefBreakfast = doc(db, userId, 'dates', `${date.year}-${date.month + 1}-${date.day}`, 'breakfast');
+  const docRefLunch = doc(db, userId, 'dates', `${date.year}-${date.month + 1}-${date.day}`, 'lunch');
+  const docRefDinner = doc(db, userId, 'dates', `${date.year}-${date.month + 1}-${date.day}`, 'dinner');
+
+  const breakfastSnap = await getDoc(docRefBreakfast);
+  const lunchSnap = await getDoc(docRefLunch);
+  const dinnerSnap = await getDoc(docRefDinner);
+
+  if (breakfastSnap.exists()) {
+    const breakfastData = breakfastSnap.data();
+    breakfastProducts.value = breakfastData.eatenProducts || [];
+  } else {
+    breakfastProducts.value = [];
+  }
+
+  if (lunchSnap.exists()) {
+    const lunchData = lunchSnap.data();
+    lunchProducts.value = lunchData.eatenProducts || [];
+  } else {
+    lunchProducts.value = [];
+  }
+
+  if (dinnerSnap.exists()) {
+    const dinnerData = dinnerSnap.data();
+    dinnerProducts.value = dinnerData.eatenProducts || [];
+  } else {
+    dinnerProducts.value = [];
+  }
+};
 
     const addProduct = async (mealType) => {
       const product = await prompt('Enter product ID:');
@@ -115,6 +130,19 @@ export default {
         eatenProducts.push({ productId: product, quantity: 1 }); // Assuming quantity starts from 1
         await setDoc(docRef, { eatenProducts }, { merge: true });
         fetchProducts(selectedDate.value);
+      }
+    };
+
+    const selectedDateProducts = (mealType) => {
+      switch (mealType) {
+        case 'breakfast':
+          return breakfastProducts.value;
+        case 'lunch':
+          return lunchProducts.value;
+        case 'dinner':
+          return dinnerProducts.value;
+        default:
+          return [];
       }
     };
 
@@ -148,7 +176,8 @@ export default {
       addProduct,
       breakfastProducts,
       lunchProducts,
-      dinnerProducts
+      dinnerProducts,
+      selectedDateProducts
     };
   },
 };
