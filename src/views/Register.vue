@@ -45,7 +45,7 @@ import { useRouter } from 'vue-router'
 import { db } from '../main.js';
 const email = ref('');
 const password = ref('');
-const router = useRouter()
+const router = useRouter();
 
 const register = () => {
   createUserWithEmailAndPassword(getAuth(), email.value, password.value)
@@ -62,28 +62,16 @@ const register = () => {
         })
         .catch((error) => {
           console.error("Error adding document: ", error);
-          alert(error.message);
+          alert("Error adding document: " + error.message); // Dodanie komunikatu błędu do alertu
         });
     })
     .catch((error) => {
       console.error("Error registering user: ", error.code);
-      alert(error.message);
+      alert("Error registering user: " + error.message); // Dodanie komunikatu błędu do alertu
     });
 };
 
 
-const signInWithGoogle = () => {
-    const provider = new GoogleAuthProvider();
-    signInWithPopup(getAuth(), provider)
-    .then((result) => {
-        console.log(result.user);
-        router.push('/info')
-    })
-    .catch((error) => {
-        console.log(error.code);
-        alert(error.message);
-    });
-};
 
 
 </script>
