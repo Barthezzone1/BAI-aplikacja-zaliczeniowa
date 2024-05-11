@@ -15,7 +15,7 @@
   <hr class="section-divider">
   <ul>
   <li v-for="(product, index) in breakfastProducts" :key="product.productId" class="list-item">
-    {{ product.productId }} - {{ product.quantity }} szt.
+    {{ product.productId }} - {{ product.totalKcal }} kcal - {{ product.quantity }} szt.
     <button @click="removeProduct('breakfast', index)" class="remove-btn">Usuń</button>
   </li>
 </ul>
@@ -34,7 +34,7 @@
   <hr class="section-divider">
   <ul>
     <li v-for="product in selectedDateProducts('lunch')" :key="product.productId" class="list-item">
-      {{ product.productId }} - {{ product.quantity }} szt.
+      {{ product.productId }} - {{ product.totalKcal }} kcal - {{ product.quantity }} szt.
       <button @click="removeProduct('lunch', index)" class="remove-btn">Usuń</button>
     </li>
   </ul>
@@ -53,7 +53,7 @@
   <hr class="section-divider">
   <ul>
     <li v-for="product in selectedDateProducts('dinner')" :key="product.productId" class="list-item">
-      {{ product.productId }} - {{ product.quantity }} szt.
+      {{ product.productId }} - {{ product.totalKcal }} kcal - {{ product.quantity }} szt.
       <button @click="removeProduct('dinner', index)" class="remove-btn">Usuń</button>
     </li>
   </ul>
@@ -133,35 +133,33 @@ export default {
     };
 
     const fetchProducts = async (date) => {
-      const docRefBreakfast = doc(db, userId, 'dates', `${date.year}-${date.month + 1}-${date.day}`, 'breakfast');
-      const docRefLunch = doc(db, userId, 'dates', `${date.year}-${date.month + 1}-${date.day}`, 'lunch');
-      const docRefDinner = doc(db, userId, 'dates', `${date.year}-${date.month + 1}-${date.day}`, 'dinner');
+  const docRefBreakfast = doc(db, userId, 'dates', `${date.year}-${date.month + 1}-${date.day}`, 'breakfast');
+  const docRefLunch = doc(db, userId, 'dates', `${date.year}-${date.month + 1}-${date.day}`, 'lunch');
+  const docRefDinner = doc(db, userId, 'dates', `${date.year}-${date.month + 1}-${date.day}`, 'dinner');
 
-      const breakfastSnap = await getDoc(docRefBreakfast);
-      const lunchSnap = await getDoc(docRefLunch);
-      const dinnerSnap = await getDoc(docRefDinner);
+  const breakfastSnap = await getDoc(docRefBreakfast);
+  const lunchSnap = await getDoc(docRefLunch);
+  const dinnerSnap = await getDoc(docRefDinner);
 
-      if (breakfastSnap.exists()) {
-        const breakfastData = breakfastSnap.data();
-        breakfastProducts.value = breakfastData.eatenProducts || [];
-      } else {
-        breakfastProducts.value = [];
-      }
+  breakfastProducts.value = await enrichProductData(breakfastSnap);
+  lunchProducts.value = await enrichProductData(lunchSnap);
+  dinnerProducts.value = await enrichProductData(dinnerSnap);
+};
 
-      if (lunchSnap.exists()) {
-        const lunchData = lunchSnap.data();
-        lunchProducts.value = lunchData.eatenProducts || [];
-      } else {
-        lunchProducts.value = [];
-      }
-
-      if (dinnerSnap.exists()) {
-        const dinnerData = dinnerSnap.data();
-        dinnerProducts.value = dinnerData.eatenProducts || [];
-      } else {
-        dinnerProducts.value = [];
-      }
+const enrichProductData = async (snapshot) => {
+  if (!snapshot.exists()) return [];
+  let productsData = snapshot.data().eatenProducts || [];
+  return Promise.all(productsData.map(async product => {
+    const productDoc = await getDoc(doc(db, "products", product.productId));
+    const productDetails = productDoc.data();
+    return {
+      ...product,
+      kcal: productDetails.kcal, // Kalorie na jednostkę
+      totalKcal: Math.round(product.quantity * productDetails.kcal), // Zaokrąglenie całkowitej liczby kalorii
+      name: productDetails.name
     };
+  }));
+};
 
     const fetchProductsList = async () => {
   const querySnapshot = await getDocs(collection(db, "products"));
@@ -402,5 +400,6 @@ const removeProduct = async (mealType, productIndex) => {
   display: flex;
   justify-content: space-between; /* Rozciąga elementy na całą szerokość kontenera */
   align-items: center; /* Wycentrowuje elementy wertykalnie */
+  padding: 5px;
 }
 </style>
