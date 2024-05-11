@@ -79,6 +79,13 @@
   <button @click="addProduct('dinner', selectedProductDinner, productQuantityDinner)"class="add-btn">Dodaj produkt</button>
 </div>
 </div>
+<div class="total-nutrition">
+    <h3>Podsumowanie Dzienne:</h3>
+    <p>Total kcal: {{ totalDailyNutrition.kcal }} kcal</p>
+    <p>Total białka: {{ totalDailyNutrition.protein }} g</p>
+    <p>Total tłuszczu: {{ totalDailyNutrition.fat }} g</p>
+    <p>Total węglowodanów: {{ totalDailyNutrition.carbs }} g</p>
+  </div>
 </template>
 
 <script>
@@ -105,6 +112,16 @@ export default {
 const breakfastSummary = computed(() => calculateMealSummaries(breakfastProducts.value));
     const lunchSummary = computed(() => calculateMealSummaries(lunchProducts.value));
     const dinnerSummary = computed(() => calculateMealSummaries(dinnerProducts.value));
+
+     // Obliczanie sumy wszystkich posiłków
+     const totalDailyNutrition = computed(() => {
+      return {
+        kcal: breakfastSummary.value.kcal + lunchSummary.value.kcal + dinnerSummary.value.kcal,
+        protein: breakfastSummary.value.protein + lunchSummary.value.protein + dinnerSummary.value.protein,
+        fat: breakfastSummary.value.fat + lunchSummary.value.fat + dinnerSummary.value.fat,
+        carbs: breakfastSummary.value.carbs + lunchSummary.value.carbs + dinnerSummary.value.carbs
+      };
+    });
 
 
 
@@ -314,7 +331,8 @@ const removeProduct = async (mealType, productIndex) => {
       productQuantityDinner,
       breakfastSummary,
       lunchSummary,
-      dinnerSummary
+      dinnerSummary,
+      totalDailyNutrition,
     };
   },
 };
