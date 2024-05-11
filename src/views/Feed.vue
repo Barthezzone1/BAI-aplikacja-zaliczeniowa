@@ -79,24 +79,68 @@
   <button @click="addProduct('dinner', selectedProductDinner, productQuantityDinner)"class="add-btn">Dodaj produkt</button>
 </div>
 </div>
-<div class="total-nutrition">
+<div>
     <h3>Podsumowanie Dzienne:</h3>
-    <p>Total kcal: {{ totalDailyNutrition.kcal }} kcal</p>
-    <p>Total białka: {{ totalDailyNutrition.protein }} g</p>
-    <p>Total tłuszczu: {{ totalDailyNutrition.fat }} g</p>
-    <p>Total węglowodanów: {{ totalDailyNutrition.carbs }} g</p>
+    <div class="progress-container">
+      <p>Kalorie: {{ totalDailyNutrition.kcal }} / {{ nutritionalGoals.caloricGoal }} kcal</p>
+      <div class="progress-bar" :style="{ width: kcalProgress + '%' }"></div>
+    </div>
+    <div class="progress-container">
+      <p>Białko: {{ totalDailyNutrition.protein }} / {{ nutritionalGoals.protein }} g</p>
+      <div class="progress-bar" :style="{ width: proteinProgress + '%' }"></div>
+    </div>
+    <div class="progress-container">
+      <p>Tłuszcz: {{ totalDailyNutrition.fat }} / {{ nutritionalGoals.fat }} g</p>
+      <div class="progress-bar" :style="{ width: fatProgress + '%' }"></div>
+    </div>
+    <div class="progress-container">
+      <p>Węglowodany: {{ totalDailyNutrition.carbs }} / {{ nutritionalGoals.carbohydrates }} g</p>
+      <div class="progress-bar" :style="{ width: carbsProgress + '%' }"></div>
+    </div>
   </div>
 </template>
 
 <script>
 import { ref, onMounted, computed } from 'vue';
-import { doc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../main';
 import { getAuth } from 'firebase/auth';
 
 export default {
   name: 'Calendar',
   setup() {
+
+    const nutritionalGoals = ref({ caloricGoal: 0, protein: 0, fat: 0, carbohydrates: 0 });
+    
+
+    // Progres jako procent osiągnięcia celu
+    const kcalProgress = computed(() => (totalDailyNutrition.value.kcal / nutritionalGoals.value.caloricGoal) * 100);
+    const proteinProgress = computed(() => (totalDailyNutrition.value.protein / nutritionalGoals.value.protein) * 100);
+    const fatProgress = computed(() => (totalDailyNutrition.value.fat / nutritionalGoals.value.fat) * 100);
+    const carbsProgress = computed(() => (totalDailyNutrition.value.carbs / nutritionalGoals.value.carbohydrates) * 100);
+
+    const fetchData = async () => {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (user) {
+        const q = query(collection(db, 'info'), where('userId', '==', user.uid));
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          querySnapshot.forEach((doc) => {
+            nutritionalGoals.value = doc.data();
+          });
+          console.log("Cel żywieniowy: ", nutritionalGoals.value);
+        } else {
+          console.log("Brak danych dla użytkownika");
+        }
+      } else {
+        console.error('User not logged in');
+      }
+    };
+
+    onMounted(() => {
+      fetchData();
+    });
 
 
     const calculateMealSummaries = (mealProducts) => {
@@ -332,7 +376,12 @@ const removeProduct = async (mealType, productIndex) => {
       breakfastSummary,
       lunchSummary,
       dinnerSummary,
-      totalDailyNutrition,
+      kcalProgress, 
+      proteinProgress, 
+      fatProgress, 
+      carbsProgress, 
+      totalDailyNutrition, 
+      nutritionalGoals
     };
   },
 };
@@ -466,5 +515,21 @@ const removeProduct = async (mealType, productIndex) => {
   color: #666;  /* Dark gray for text color for subtlety */
   font-size: 1em;  /* Slightly smaller font size than the header */
   margin-bottom: 10px;  /* Space below the summary before the list */
+}
+
+.progress-container {
+  width: 90%;
+  background-color: #ddd;
+  border-radius: 5px;
+  margin: 10px auto;
+}
+
+.progress-bar {
+  height: 20px;
+  background-color: #4CAF50;
+  text-align: center;
+  color: white;
+  border-radius: 5px;
+  transition: width 0.3s ease;
 }
 </style>
