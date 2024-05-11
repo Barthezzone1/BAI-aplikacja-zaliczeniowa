@@ -323,6 +323,8 @@ const removeProduct = async (mealType, productIndex) => {
         padding: 20px; /* Wypełnienie wewnątrz karty */
         border-radius: 5px; /* Zaokrąglenie rogów karty */
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Cień */
+        margin-bottom: 20px;
+        margin-top: 20px;
 }
 
 .select-full-width {
