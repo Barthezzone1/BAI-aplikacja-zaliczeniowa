@@ -32,7 +32,7 @@ const redirectToInfo = () => {
 
 const fetchData = async () => {
   const user = auth.currentUser;
-  console.log(user,"huj");
+  console.log(user);
   if (user) {
     userUid.value = user.uid; // Przypisanie UID użytkownika
     console.log("Użytkownik jest zalogowany. UID:", userUid.value);
