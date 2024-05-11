@@ -458,7 +458,7 @@ const removeProduct = async (mealType, productIndex) => {
 }
 
 .quantity-input {
-  width: 50px; /* Szerokość pola liczbowego */
+  width: 55px; /* Szerokość pola liczbowego */
   padding: 8px; /* Padding dla wygodniejszego wprowadzania */
   margin-left: 10px; /* Odstęp od listy rozwijanej */
   margin-right: 10px; /* Odstęp przed przyciskiem */
