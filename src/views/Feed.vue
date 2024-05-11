@@ -80,23 +80,35 @@
 </div>
 </div>
 <div>
-    <h3>Podsumowanie Dzienne:</h3>
+    <h2 class="section-header">Podsumowanie Dzienne:</h2>
     <div class="progress-container">
-      <p>Kalorie: {{ totalDailyNutrition.kcal }} / {{ nutritionalGoals.caloricGoal }} kcal</p>
-      <div class="progress-bar" :style="{ width: kcalProgress + '%' }"></div>
-    </div>
-    <div class="progress-container">
-      <p>Białko: {{ totalDailyNutrition.protein }} / {{ nutritionalGoals.protein }} g</p>
-      <div class="progress-bar" :style="{ width: proteinProgress + '%' }"></div>
-    </div>
-    <div class="progress-container">
-      <p>Tłuszcz: {{ totalDailyNutrition.fat }} / {{ nutritionalGoals.fat }} g</p>
-      <div class="progress-bar" :style="{ width: fatProgress + '%' }"></div>
-    </div>
-    <div class="progress-container">
-      <p>Węglowodany: {{ totalDailyNutrition.carbs }} / {{ nutritionalGoals.carbohydrates }} g</p>
-      <div class="progress-bar" :style="{ width: carbsProgress + '%' }"></div>
-    </div>
+  <p>Kalorie: {{ totalDailyNutrition.kcal }} / {{ nutritionalGoals.caloricGoal }} kcal</p>
+  <div class="progress-bar" :style="{
+      width: (kcalProgress <= 100 ? kcalProgress : 100) + '%',
+      backgroundColor: kcalProgress > 100 ? '#f44336' : '#4CAF50'
+    }">{{ kcalProgress.toFixed(0) }}%</div>
+</div>
+<div class="progress-container">
+  <p>Białko: {{ totalDailyNutrition.protein }} / {{ nutritionalGoals.protein }} g</p>
+  <div class="progress-bar" :style="{
+      width: (proteinProgress <= 100 ? proteinProgress : 100) + '%',
+      backgroundColor: proteinProgress > 100 ? '#f44336' : '#4CAF50'
+    }">{{ proteinProgress.toFixed(0) }}%</div>
+</div>
+<div class="progress-container">
+  <p>Tłuszcz: {{ totalDailyNutrition.fat }} / {{ nutritionalGoals.fat }} g</p>
+  <div class="progress-bar" :style="{
+      width: (fatProgress <= 100 ? fatProgress : 100) + '%',
+      backgroundColor: fatProgress > 100 ? '#f44336' : '#4CAF50'
+    }">{{ fatProgress.toFixed(0) }}%</div>
+</div>
+<div class="progress-container">
+  <p>Węglowodany: {{ totalDailyNutrition.carbs }} / {{ nutritionalGoals.carbohydrates }} g</p>
+  <div class="progress-bar" :style="{
+      width: (carbsProgress <= 100 ? carbsProgress : 100) + '%',
+      backgroundColor: carbsProgress > 100 ? '#f44336' : '#4CAF50'
+    }">{{ carbsProgress.toFixed(0) }}%</div>
+</div>
   </div>
 </template>
 
