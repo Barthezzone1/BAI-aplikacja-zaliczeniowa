@@ -1,5 +1,8 @@
 # Dziennik odżywiania - InFit
 
+## Hosting
+[bai-infit.web.app](https://bai-infit.web.app/)
+
 ## Interfejs
 [Projekt interfejsu / widoki](https://marvelapp.com/prototype/c6fj0f3/screens)
 
