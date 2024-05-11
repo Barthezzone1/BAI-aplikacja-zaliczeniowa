@@ -8,49 +8,84 @@
     <div class="days">
       <div v-for="date in dates" :key="date.day" @click="selectDate(date)" :class="{ active: isSelected(date) }">{{ date.day }}</div>
     </div>
-    <div>Wybrana data: {{ wybData }}</div>
+    <div class="selected-date">Wybrana data: {{ wybData }}</div>
   </div>
   <div class="card">
-    <h2 class="section-header">ŚNIADANIE</h2>
-    <hr class="section-divider">
-    <ul>
-      <li v-for="product in selectedDateProducts('breakfast')" :key="product.productId">
-        {{ product.productId }} - {{ product.quantity }} szt.
-      </li>
-    </ul>
-    <button @click="addProduct('breakfast')">Dodaj produkt</button>
-  </div>
-  <div class="card">
-    <h2 class="section-header">OBIAD</h2>
-    <hr class="section-divider">
-    <ul>
-      <li v-for="product in selectedDateProducts('lunch')" :key="product.productId">
-        {{ product.productId }} - {{ product.quantity }} szt.
-      </li>
-    </ul>
-    <button @click="addProduct('lunch')">Dodaj produkt</button>
-  </div>
-  <div class="card">
-    <h2 class="section-header">KOLACJA</h2>
-    <hr class="section-divider">
-    <ul>
-      <li v-for="product in selectedDateProducts('dinner')" :key="product.productId">
-        {{ product.productId }} - {{ product.quantity }} szt.
-      </li>
-    </ul>
-    <button @click="addProduct('dinner')">Dodaj produkt</button>
-  </div>
+  <h2 class="section-header">ŚNIADANIE</h2>
+  <hr class="section-divider">
+  <ul>
+  <li v-for="(product, index) in breakfastProducts" :key="product.productId" class="list-item">
+    {{ product.productId }} - {{ product.quantity }} szt.
+    <button @click="removeProduct('breakfast', index)" class="remove-btn">Usuń</button>
+  </li>
+</ul>
+<hr class="section-divider">
+<div class="input-group">
+  <select v-model="selectedProductBreakfast" class="select-full-width">
+    <option disabled value="">{{ 'Wybierz produkt' }}</option>
+    <option v-for="product in products" :value="product.id">{{ product.id }}</option>
+  </select>
+  <input type="number" v-model.number="productQuantityBreakfast" min="1" class="quantity-input">
+  <button @click="addProduct('breakfast', selectedProductBreakfast, productQuantityBreakfast)"class="add-btn">Dodaj produkt</button>
+</div>
+</div>
+<div class="card">
+  <h2 class="section-header">OBIAD</h2>
+  <hr class="section-divider">
+  <ul>
+    <li v-for="product in selectedDateProducts('lunch')" :key="product.productId" class="list-item">
+      {{ product.productId }} - {{ product.quantity }} szt.
+      <button @click="removeProduct('lunch', index)" class="remove-btn">Usuń</button>
+    </li>
+  </ul>
+  <hr class="section-divider">
+  <div class="input-group">
+  <select v-model="selectedProductLunch" class="select-full-width">
+    <option disabled value="">{{ 'Wybierz produkt' }}</option>
+    <option v-for="product in products" :value="product.id">{{ product.id }}</option>
+  </select>
+  <input type="number" v-model.number="productQuantityLunch" min="1" class="quantity-input">
+  <button @click="addProduct('lunch', selectedProductLunch, productQuantityLunch)"class="add-btn">Dodaj produkt</button>
+</div>
+</div>
+<div class="card">
+  <h2 class="section-header">KOLACJA</h2>
+  <hr class="section-divider">
+  <ul>
+    <li v-for="product in selectedDateProducts('dinner')" :key="product.productId" class="list-item">
+      {{ product.productId }} - {{ product.quantity }} szt.
+      <button @click="removeProduct('dinner', index)" class="remove-btn">Usuń</button>
+    </li>
+  </ul>
+  <hr class="section-divider">
+  <div class="input-group">
+  <select v-model="selectedProductDinner" class="select-full-width">
+    <option disabled value="">{{ 'Wybierz produkt' }}</option>
+    <option v-for="product in products" :value="product.id">{{ product.id }}</option>
+  </select>
+  <input type="number" v-model.number="productQuantityDinner " min="1" class="quantity-input">
+  <button @click="addProduct('dinner', selectedProductDinner, productQuantityDinner)"class="add-btn">Dodaj produkt</button>
+</div>
+</div>
 </template>
 
 <script>
 import { ref, onMounted } from 'vue';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from '../main';
 import { getAuth } from 'firebase/auth';
 
 export default {
   name: 'Calendar',
   setup() {
+
+    const productQuantityBreakfast = ref(1);
+    const productQuantityLunch = ref(1);
+    const productQuantityDinner = ref(1);
+
+    const products = ref([]);
+  
+ 
     const currentDate = ref(new Date());
     const selectedDate = ref({
       day: currentDate.value.getDate(),
@@ -128,21 +163,68 @@ export default {
       }
     };
 
-    const addProduct = async (mealType) => {
-      const product = await prompt('Enter product ID:');
-      if (product) {
-        const docRef = doc(db, userId, 'dates', `${selectedDate.value.year}-${selectedDate.value.month + 1}-${selectedDate.value.day}`, mealType);
-        const docSnap = await getDoc(docRef);
-        let data = {};
-        if (docSnap.exists()) {
-          data = docSnap.data();
-        }
-        const eatenProducts = data.eatenProducts || [];
-        eatenProducts.push({ productId: product, quantity: 1 }); // Assuming quantity starts from 1
-        await setDoc(docRef, { eatenProducts }, { merge: true });
-        fetchProducts(selectedDate.value);
-      }
-    };
+    const fetchProductsList = async () => {
+  const querySnapshot = await getDocs(collection(db, "products"));
+  let allProducts = [];
+  querySnapshot.forEach((doc) => {
+    allProducts.push({ id: doc.id, ...doc.data() });
+  });
+  products.value = allProducts;
+};
+
+onMounted(async () => {
+  await fetchProductsList();
+});
+
+const addProduct = async (mealType, productId, quantity) => {
+  if (!productId || quantity === undefined || quantity < 1) {
+    console.error('Product ID or quantity is undefined or invalid');
+    return;
+  }
+
+  const productToAdd = products.value.find(p => p.id === productId);
+  if (!productToAdd) {
+    console.error('Product not found');
+    return;
+  }
+
+  const docRef = doc(db, userId, 'dates', `${selectedDate.value.year}-${selectedDate.value.month + 1}-${selectedDate.value.day}`, mealType);
+  const docSnap = await getDoc(docRef);
+  let data = {};
+
+  if (docSnap.exists()) {
+    data = docSnap.data();
+    let existingProduct = data.eatenProducts.find(p => p.productId === productId);
+    if (existingProduct) {
+      existingProduct.quantity += quantity; // Update existing quantity
+    } else {
+      data.eatenProducts.push({ productId: productToAdd.id, quantity }); // Add new product
+    }
+  } else {
+    data = { eatenProducts: [{ productId: productToAdd.id, quantity }] }; // Create new entry if none exists
+  }
+
+  await setDoc(docRef, data, { merge: true });
+  fetchProducts(selectedDate.value);
+};
+
+const removeProduct = async (mealType, productIndex) => {
+  try {
+    const docRef = doc(db, userId, 'dates', `${selectedDate.value.year}-${selectedDate.value.month + 1}-${selectedDate.value.day}`, mealType);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      let data = docSnap.data();
+      let products = data.eatenProducts || [];
+      products.splice(productIndex, 1);
+
+      await setDoc(docRef, { eatenProducts: products }, { merge: true });
+      fetchProducts(selectedDate.value);
+    }
+  } catch (error) {
+    console.error("Failed to remove product:", error);
+  }
+};
 
     const selectedDateProducts = (mealType) => {
       switch (mealType) {
@@ -191,7 +273,12 @@ export default {
       breakfastProducts,
       lunchProducts,
       dinnerProducts,
-      selectedDateProducts
+      selectedDateProducts,
+      products,
+      removeProduct,
+      productQuantityBreakfast,
+      productQuantityLunch,
+      productQuantityDinner
     };
   },
 };
@@ -200,7 +287,7 @@ export default {
 
 <style>
 .calendar {
-  width: 300px;
+  width: 500px;
   border: 1px solid #ccc;
   padding: 10px;
   margin: 0 auto;
@@ -232,11 +319,88 @@ export default {
 }
 
 .card {
-  width: 300px; /* Szerokość karty */
+  width: 500px; /* Szerokość karty */
         margin: 0 auto; /* Wyśrodkowanie karty */
         border: 1px solid #ccc; /* Ramka karty */
         padding: 20px; /* Wypełnienie wewnątrz karty */
         border-radius: 5px; /* Zaokrąglenie rogów karty */
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Cień */
+}
+
+.select-full-width {
+  width: 100%; /* Ustawia szerokość na 100% dostępnej przestrzeni */
+  padding: 8px; /* Dodaje padding dla lepszego wyglądu */
+  box-sizing: border-box; /* Zapewnia, że padding i border są wliczone w szerokość */
+  margin-top: 10px; /* Dodaje górny margines */
+  border: 2px solid #ccc; /* Dodaje obramówkę o grubości 2px i kolorze szarym */
+  border-radius: 4px; /* Dodaje lekko zaokrąglone rogi */
+  flex-grow: 1; /* Pozwala <select> rozciągnąć się, aby zająć dostępną przestrzeń */
+  margin-right: 10px; /* Dodaje margines po prawej stronie, aby oddzielić od <input> */
+  box-sizing: border-box; /* Zapewnia, że padding i border są wliczone w szerokość */
+  height: 40px; /* Ustawia wysokość na 40px dla jednolitości */
+}
+
+.quantity-input {
+  width: 50px; /* Szerokość pola liczbowego */
+  padding: 8px; /* Padding dla wygodniejszego wprowadzania */
+  margin-left: 10px; /* Odstęp od listy rozwijanej */
+  margin-right: 10px; /* Odstęp przed przyciskiem */
+  border: 2px solid #ccc; /* Dodaje obramówkę o grubości 2px i kolorze szarym */
+  border-radius: 4px; /* Dodaje lekko zaokrąglone rogi */
+  box-sizing: border-box; /* Zapewnia, że padding i border są wliczone w szerokość */
+  height: 40px; /* Ustawia wysokość na 40px dla jednolitości */
+}
+
+.input-group {
+  display: flex; /* Ustawia kontener na flexbox */
+  align-items: center; /* Wycentrowuje elementy wertykalnie */
+  margin-top: 10px; /* Dodaje margines na górze dla odstępu od listy produktów */
+}
+
+.selected-date {
+    text-align: center; /* Wyśrodkowanie tekstu */
+    font-weight: bold; /* Pogrubienie tekstu */
+    margin-top: 20px; /* Dodatkowy margines na górze dla lepszego odstępu */
+    font-size: 1.2em; /* Nieco większa czcionka dla lepszej widoczności */
+  }
+
+  .section-header {
+    text-align: center; /* Wyśrodkowanie tekstu */
+    font-weight: bold; /* Pogrubienie tekstu */
+    margin-top: 20px; /* Dodatkowy margines na górze dla lepszego odstępu */
+    font-size: 1.2em; /* Nieco większa czcionka dla lepszej widoczności */
+  }
+
+  .add-btn {
+  background-color: #4CAF50; /* Zielony */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 10px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.remove-btn {
+  background-color: #f44336; /* Czerwony */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 10px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.list-item {
+  display: flex;
+  justify-content: space-between; /* Rozciąga elementy na całą szerokość kontenera */
+  align-items: center; /* Wycentrowuje elementy wertykalnie */
 }
 </style>
