@@ -11,7 +11,11 @@
     <div class="selected-date">Wybrana data: {{ wybData }}</div>
   </div>
   <div class="card">
-  <h2 class="section-header">ŚNIADANIE</h2>
+    <h2 class="section-header">ŚNIADANIE</h2>
+    <div class="meal-summary">
+    {{ breakfastSummary.kcal }} kcal, {{ breakfastSummary.protein }} g białka, 
+    {{ breakfastSummary.fat }} g tłuszczu, {{ breakfastSummary.carbs }} g węglowodanów
+  </div>
   <hr class="section-divider">
   <ul>
   <li v-for="(product, index) in breakfastProducts" :key="product.productId" class="list-item">
@@ -31,6 +35,10 @@
 </div>
 <div class="card">
   <h2 class="section-header">OBIAD</h2>
+  <div class="meal-summary">
+    {{ lunchSummary.kcal }} kcal, {{ lunchSummary.protein }} g białka, 
+    {{ lunchSummary.fat }} g tłuszczu, {{ lunchSummary.carbs }} g węglowodanów
+  </div>
   <hr class="section-divider">
   <ul>
     <li v-for="product in selectedDateProducts('lunch')" :key="product.productId" class="list-item">
@@ -50,6 +58,10 @@
 </div>
 <div class="card">
   <h2 class="section-header">KOLACJA</h2>
+  <div class="meal-summary">
+    {{ dinnerSummary.kcal }} kcal, {{ dinnerSummary.protein }} g białka, 
+    {{ dinnerSummary.fat }} g tłuszczu, {{ dinnerSummary.carbs }} g węglowodanów
+  </div>
   <hr class="section-divider">
   <ul>
     <li v-for="product in selectedDateProducts('dinner')" :key="product.productId" class="list-item">
@@ -70,7 +82,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { doc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from '../main';
 import { getAuth } from 'firebase/auth';
@@ -78,6 +90,23 @@ import { getAuth } from 'firebase/auth';
 export default {
   name: 'Calendar',
   setup() {
+
+
+    const calculateMealSummaries = (mealProducts) => {
+  return mealProducts.reduce((acc, product) => {
+    acc.kcal += product.totalKcal || 0;
+    acc.protein += product.protein || 0;
+    acc.fat += product.fat || 0;
+    acc.carbs += product.carbs || 0;
+    return acc;
+  }, { kcal: 0, protein: 0, fat: 0, carbs: 0 });
+};
+
+const breakfastSummary = computed(() => calculateMealSummaries(breakfastProducts.value));
+    const lunchSummary = computed(() => calculateMealSummaries(lunchProducts.value));
+    const dinnerSummary = computed(() => calculateMealSummaries(dinnerProducts.value));
+
+
 
     const productQuantityBreakfast = ref(1);
     const productQuantityLunch = ref(1);
@@ -151,15 +180,20 @@ const enrichProductData = async (snapshot) => {
   let productsData = snapshot.data().eatenProducts || [];
   return Promise.all(productsData.map(async product => {
     const productDoc = await getDoc(doc(db, "products", product.productId));
+    if (!productDoc.exists()) return null;
     const productDetails = productDoc.data();
     return {
       ...product,
-      kcal: productDetails.kcal, // Kalorie na jednostkę
-      totalKcal: Math.round(product.quantity * productDetails.kcal), // Zaokrąglenie całkowitej liczby kalorii
+      kcal: productDetails.kcal, // Calories per unit
+      totalKcal: Math.round(product.quantity * (productDetails.kcal || 0)), // Total calories rounded
+      protein: Math.round(product.quantity * (productDetails.protein || 0)), // Total protein rounded
+      fat: Math.round(product.quantity * (productDetails.fat || 0)), // Total fat rounded
+      carbs: Math.round(product.quantity * (productDetails.carbs || 0)), // Total carbohydrates rounded
       name: productDetails.name
     };
   }));
 };
+
 
     const fetchProductsList = async () => {
   const querySnapshot = await getDocs(collection(db, "products"));
@@ -172,6 +206,7 @@ const enrichProductData = async (snapshot) => {
 
 onMounted(async () => {
   await fetchProductsList();
+  fetchProducts(selectedDate.value); // Wczytaj produkty dla wybranej daty, jeśli to konieczne
 });
 
 const addProduct = async (mealType, productId, quantity) => {
@@ -276,7 +311,10 @@ const removeProduct = async (mealType, productIndex) => {
       removeProduct,
       productQuantityBreakfast,
       productQuantityLunch,
-      productQuantityDinner
+      productQuantityDinner,
+      breakfastSummary,
+      lunchSummary,
+      dinnerSummary
     };
   },
 };
@@ -403,5 +441,12 @@ const removeProduct = async (mealType, productIndex) => {
   justify-content: space-between; /* Rozciąga elementy na całą szerokość kontenera */
   align-items: center; /* Wycentrowuje elementy wertykalnie */
   padding: 5px;
+}
+
+.meal-summary {
+  text-align: center;
+  color: #666;  /* Dark gray for text color for subtlety */
+  font-size: 1em;  /* Slightly smaller font size than the header */
+  margin-bottom: 10px;  /* Space below the summary before the list */
 }
 </style>
